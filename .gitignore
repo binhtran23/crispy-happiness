@@ -1,2 +1,5 @@
 *.pdf
 .DS_Store
+
+data.json
+fetch_slide.py
