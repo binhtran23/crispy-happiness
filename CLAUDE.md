@@ -2,6 +2,10 @@
 
 Lecture material lives under `LEC_DAYXX/` folders (course COMP2010) — the slide deck PDF(s) for that lecture, plus that folder's `knowledge/` subfolder.
 
+### Track specialization
+
+From **LEC_DAY16 onward**, the lecture track is specialized in **AI Infrastructure**. Earlier days cover general COMP2010 content; Day 16+ focuses on infrastructure for AI systems (training pipelines, serving, distributed compute, etc.).
+
 ### Roles & models
 
 - **`lecture-tutor` (Opus)** — runs the actual teaching session: orientation, Socratic teaching, Examiner checks, recap, and maintains `LEC_DAYXX/knowledge/NOTES.md`. Opus is used here because the adversarial/Socratic reasoning benefits from it.
@@ -17,8 +21,12 @@ Before starting a session, `lecture-tutor` checks the lecture folder:
 
 The 40-page threshold is a starting point, not fixed — adjust it here (single source of truth) if it proves too aggressive or too lax; don't hardcode a different number inside the `lecture-tutor` skill itself.
 
-### Notes location
+### Knowledge folder contents
 
-`NOTES.md` lives at `LEC_DAYXX/knowledge/NOTES.md`, alongside `core-knowledge.md`.
+`LEC_DAYXX/knowledge/` holds three files:
+
+- `core-knowledge.md` — extracted lecture content (see above).
+- `NOTES.md` — cumulative session notes; appended each session, never overwritten.
+- `quiz.md` — a quiz snapshot for the lecture; regenerated (overwritten, not appended) at the end of every `lecture-tutor` session, weighted toward `NOTES.md`'s current misconceptions/weak areas. See the skill for exact generation rules.
 
 Claude orchestrates by invoking `lecture-tutor` (and, when needed, the `lecture-extractor` subagent) — it does not duplicate either one's internal instructions here.
