@@ -169,6 +169,25 @@ clearly warrants more or fewer.
   `core-knowledge.md`'s "Examples & Distinctions" section where applicable, not random
   wrong answers.
 
+**Option hygiene (guard against test-taking tells — the answer must require knowing the
+material, never a surface pattern):**
+- **Balance option length.** The correct answer must NOT be reliably the longest or most
+  detailed option. Keep all four options within a similar length band; if the right answer
+  needs a qualifier, add comparable qualifiers/specificity to the distractors, or trim the
+  correct one. A student who always picks the longest option should score no better than
+  chance.
+- **Make distractors overlap the truth.** Each wrong option should be partially correct or a
+  near-miss (right mechanism, wrong detail; correct-for-an-adjacent-concept; a common
+  misconception stated confidently) so the options genuinely compete. Avoid throwaway/obviously
+  absurd options — an option nobody would pick is a wasted slot.
+- **Vary the correct-answer position** across questions (roughly balance A/B/C/D over the
+  quiz); don't let the answer cluster on one letter.
+- **No structural giveaways:** don't let only the correct option echo the question's wording,
+  carry hedging words ("may", "can", "helps") the others lack, or be the only grammatically
+  smooth fit. Distractors should be phrased with the same confidence as the answer.
+- After drafting, re-read each question ignoring the meaning: if length, position, phrasing
+  confidence, or wording-overlap alone points to the answer, revise before finalizing.
+
 This file is portable: the student may copy it into a chat interface and ask for an
 interactive graded version — the structure above (question/options/answer/explanation) is
 intentionally kept parse-friendly for that.
