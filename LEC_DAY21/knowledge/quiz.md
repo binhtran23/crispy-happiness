@@ -1,131 +1,131 @@
 # LEC_DAY21 — Quiz
 
 ## Q1 [priority: Essential]
-**Question:** Điểm khác biệt nào khiến deploy trong AI CI/CD được coi là "non-deterministic" và cần thêm một cơ chế đặc biệt so với software truyền thống?
-- A) Vì code AI luôn có bug nên phải test nhiều hơn
-- B) Vì cùng code + data, train lại có thể ra model khác nhau, nên phải có Eval Gate so sánh với production trước khi deploy
-- C) Vì AI deploy chậm hơn nên cần cache
-- D) Vì AI không dùng Git
-
-**Answer:** B
-**Explanation:** Non-deterministic nghĩa là kết quả train không cố định (random seed, thứ tự batch, phần cứng...), nên "code test pass" không đảm bảo model mới tốt bằng cũ → cần Eval Gate. A/C/D không liên quan đến tính non-deterministic.
-
-## Q2 [priority: Essential]
-**Question:** Trong Eval Gate, tại sao test set BẮT BUỘC phải cố định (fixed, non-shuffled) khi so sánh model mới với model production?
-- A) Để tiết kiệm bộ nhớ khi load test set
-- B) Để test set nhỏ hơn, chạy nhanh hơn
-- C) Để delta accuracy phản ánh thuần chênh lệch năng lực model, không bị test set thay đổi làm nhiễu (confound)
-- D) Vì MLflow yêu cầu test set cố định
-
-**Answer:** C
-**Explanation:** Nếu test set shuffle mới mỗi lần, model mới và model cũ bị chấm trên hai bộ đề khác nhau → không biết delta đến từ model tốt hơn hay tập đề dễ hơn. Cố định test set giữ biến này là hằng số. Lý do "reproducible/kiểm chứng" đúng nhưng thứ yếu; A/B/D là distractor.
-
-## Q3 [priority: Essential]
-**Question:** Eval Gate chỉ tính `delta = new_acc - prod_acc` với threshold 2%. Rủi ro lớn nhất của cấu hình chỉ-một-metric này là gì?
-- A) Không có rủi ro gì, accuracy là đủ
-- B) Một model accuracy cao hơn nhưng nặng hơn có thể làm latency P95 tăng vọt mà gate không phát hiện
-- C) Threshold 2% quá cao
-- D) Gate chạy quá chậm
-
-**Answer:** B
-**Explanation:** Single-metric gate là điểm mù: model có thể regression về latency, fairness/bias trong khi accuracy vẫn đạt. Best practice là multi-metric gating (accuracy ±2%, latency P95 ±10%, F1, fairness), mỗi chiều một threshold.
-
-## Q4 [priority: Essential]
-**Question:** DVC lưu data trên remote (vd S3) theo content-addressable storage. Rollback về data version cũ hoạt động như thế nào?
-- A) DVC gọi API undo của S3 để khôi phục file cũ
-- B) git checkout con trỏ (.dvc) cũ → chứa hash cũ → dvc pull lấy object cũ vẫn còn nguyên trên remote (vì DVC không ghi đè, chỉ thêm object mới)
-- C) DVC train lại model từ đầu để tái tạo data
-- D) Không thể rollback data với DVC
-
-**Answer:** B
-**Explanation:** Content-addressable = lưu theo hash, không bao giờ ghi đè; version cũ (hash cũ) vẫn tồn tại trên remote. Rollback = quay con trỏ về hash cũ + pull. Giới hạn: nếu object bị xoá tay/lifecycle policy expire thì con trỏ dangling và pull fail.
-
-## Q5 [priority: Essential]
-**Question:** Phát biểu nào ĐÚNG về quan hệ giữa DVC và MLflow?
-- A) DVC thay thế MLflow, chỉ cần dùng một
-- B) MLflow version data, DVC track metrics
-- C) DVC = pipeline + data versioning; MLflow = metrics + model registry; dùng cả hai vì bổ sung nhau
-- D) Cả hai đều chỉ dùng cho LLM
-
-**Answer:** C
-**Explanation:** Bài nhấn mạnh "use both, don't choose one" — chúng bổ sung: DVC trả lời "data nào, stage nào tạo ra"; MLflow trả lời "run nào, model version nào, stage lifecycle nào". B đảo ngược vai trò.
-
-## Q6 [priority: Essential]
-**Question:** Chiến lược deployment nào mirror toàn bộ traffic sang model mới nhưng KHÔNG trả response của nó cho user (chỉ log để so sánh)?
-- A) Canary
-- B) Blue/Green
-- C) Shadow (Dark Launch)
-- D) Rolling
-
-**Answer:** C
-**Explanation:** Shadow = zero rủi ro user-facing (response v2 chỉ log, không trả), đổi lại không đo được phản ứng thật của user + gấp đôi compute. Canary chia traffic một phần tăng dần; Blue/Green switch toàn bộ; Rolling thay pod lần lượt.
-
-## Q7 [priority: Essential]
-**Question:** Trong CI pipeline cho AI, tại sao Data Validation được đặt TRƯỚC Model Training?
-- A) Vì Great Expectations chạy chậm nên phải chạy trước
-- B) Fail-fast: nếu data hỏng, chặn pipeline ngay trước khi đốt hàng giờ GPU để train ra model vô dụng
-- C) Vì training không cần data
-- D) Để clean và chuẩn hoá data cho model
-
-**Answer:** B
-**Explanation:** Nguyên tắc fail-fast tiết kiệm tài nguyên training. Lưu ý D sai: Data Validation là quality GATE (phát hiện + chặn), KHÔNG phải bước clean/chuẩn hoá data.
-
-## Q8 [priority: Important] [weak-area]
-**Question:** Great Expectations trong pipeline làm nhiệm vụ gì?
-- A) Tự động sửa và chuẩn hoá dữ liệu bẩn trước khi train
-- B) Kiểm tra chất lượng data (schema, null rate, drift, volume, freshness) và FAIL pipeline nếu vi phạm, nhưng không tự sửa data
-- C) Train model
-- D) Deploy model lên production
-
-**Answer:** B
-**Explanation:** Great Expectations là quality GATE: phát hiện data xấu và chặn, KHÔNG biến đổi/clean data. Đây là điểm dễ nhầm giữa "validation (gate)" và "preprocessing (cleaning)".
-
-## Q9 [priority: Important]
-**Question:** Cơ chế nào của Canary deployment giúp giới hạn "blast radius" khi model mới có lỗi mà Eval Gate không bắt được?
-- A) Chạy smoke test trước
-- B) Route một tỉ lệ nhỏ traffic (vd 5%) sang model mới và tăng dần qua các health-check gate, rollback nếu P99 latency vượt ngưỡng hoặc accuracy giảm >2%
-- C) Deploy song song 2 env đầy đủ rồi switch
-- D) Mirror traffic không trả response
-
-**Answer:** B
-**Explanation:** Canary giới hạn thiệt hại vì lỗi chỉ chạm % nhỏ user, phát hiện sớm trên traffic thật rồi rollback trước khi lên 100%. C là Blue/Green, D là Shadow.
-
-## Q10 [priority: Important]
-**Question:** Trong A/B testing, tại sao phải hash user_id để cùng một user luôn thấy cùng một variant?
-- A) Để tiết kiệm băng thông
-- B) Vì thuật toán MD5 nhanh
-- C) Đảm bảo UX nhất quán VÀ tránh nhiễm chéo phép đo (outcome quy được về đúng một model) → so sánh sạch
-- D) Để model mới luôn nhận nhiều traffic hơn
-
-**Answer:** C
-**Explanation:** Deterministic routing giữ user dính một variant → mỗi click/conversion quy được về đúng một model. Nếu random mỗi request, dữ liệu A/B bị nhiễm chéo và kết luận "model nào thắng" vô nghĩa — cùng tinh thần fixed test set ở Eval Gate.
-
-## Q11 [priority: Important]
-**Question:** Model Test loại "Invariance" khác "Directional" ở điểm nào?
-- A) Invariance đổi input theo cách KHÔNG nên ảnh hưởng output → output giữ nguyên; Directional đổi input theo cách NÊN ảnh hưởng → output đổi đúng chiều
-- B) Chúng giống hệt nhau
-- C) Invariance chỉ dùng cho text, Directional chỉ cho ảnh
-- D) Directional kiểm tra tốc độ, Invariance kiểm tra accuracy
+**Question:** Vì sao deploy trong AI CI/CD được coi là "non-deterministic", dẫn tới nhu cầu về Eval Gate?
+- A) Cùng code và data, mỗi lần train lại có thể ra model khác nhau
+- B) Code AI thường chứa nhiều bug ẩn hơn code thường
+- C) Model AI luôn cần GPU nên build lâu và dễ lỗi
+- D) AI không dùng Git nên không kiểm soát được version
 
 **Answer:** A
-**Explanation:** Ví dụ: Invariance = xoay ảnh 90° → prediction không đổi. Directional = thêm "not" vào câu → sentiment đảo chiều. Tiêu chí: thay đổi input có "nên" làm output đổi hay không.
+**Explanation:** Non-deterministic đến từ random seed, thứ tự batch, phần cứng — nên "test pass" không đảm bảo model mới không kém model cũ, cần Eval Gate so sánh. B và C mô tả đặc điểm khác không phải nguyên nhân non-deterministic; D sai vì AI vẫn dùng Git (cộng DVC).
 
-## Q12 [priority: Important]
-**Question:** Trong MLflow Model Registry, alias "champion" và "challenger" khác nhau ở điểm nào?
-- A) champion là model tốt hơn về mặt kiến trúc
-- B) champion = version đang chạy Production; challenger = version ứng viên đang A/B test
-- C) champion dùng cho LLM, challenger cho traditional ML
-- D) Chúng là hai loại model khác nhau
+## Q2 [priority: Essential]
+**Question:** Trong Eval Gate, lý do CHÍNH khiến test set phải cố định (fixed, non-shuffled) là gì?
+- A) Giúp con người kiểm chứng lại kết quả về sau
+- B) Giữ test set nhỏ để job chạy nhanh và tốn ít RAM
+- C) Tránh test set thay đổi làm nhiễu (confound) phép so sánh delta
+- D) Vì MLflow bắt buộc test set phải cố định khi log
+
+**Answer:** C
+**Explanation:** Nếu test set đổi mỗi lần, không biết delta đến từ model tốt hơn hay đề dễ hơn. A đúng nhưng chỉ là lý do thứ yếu (hệ quả). B sai mục đích; D bịa ràng buộc không có.
+
+## Q3 [priority: Essential]
+**Question:** Eval Gate chỉ chấm một metric là accuracy với threshold 2%. Rủi ro lớn nhất của cấu hình này?
+- A) Threshold 2% quá chặt nên model tốt vẫn bị chặn nhầm
+- B) Model mới accuracy cao hơn nhưng nặng hơn làm latency P95 tăng vọt
+- C) Accuracy tính chậm khiến gate trở thành nút thắt cổ chai
+- D) Một metric là đủ, cấu hình này không có rủi ro đáng kể
 
 **Answer:** B
-**Explanation:** Tiêu chí phân biệt là VAI TRÒ/STAGE trong Registry, không phải loại model. champion = Production hiện tại; challenger = candidate đang thử nghiệm A/B.
+**Explanation:** Single-metric là điểm mù: model có thể regression về latency, fairness/bias mà accuracy vẫn đạt → cần multi-metric gating. A hiểu sai chiều của threshold; C nhầm về hiệu năng tính toán; D chủ quan.
+
+## Q4 [priority: Essential]
+**Question:** DVC lưu data trên remote theo content-addressable storage. Rollback về data version cũ diễn ra thế nào?
+- A) DVC train lại pipeline để tái tạo đúng data cũ
+- B) DVC gọi API undo của S3 để phục hồi file đã ghi đè
+- C) Sao chép data hiện tại rồi chỉnh tay về trạng thái cũ
+- D) git checkout con trỏ .dvc cũ (hash cũ) rồi dvc pull object cũ còn nguyên trên remote
+
+**Answer:** D
+**Explanation:** Content-addressable = lưu theo hash, không ghi đè, nên object cũ vẫn tồn tại; rollback là trỏ lại hash cũ + pull. B giả định S3 ghi đè (sai bản chất); A và C không phải cơ chế của DVC.
+
+## Q5 [priority: Essential]
+**Question:** Phát biểu nào mô tả ĐÚNG quan hệ giữa DVC và MLflow?
+- A) DVC lo pipeline + data versioning, MLflow lo metrics + model registry, dùng cả hai
+- B) MLflow version data, còn DVC chuyên track metrics thí nghiệm
+- C) DVC là bản thay thế nhẹ hơn của MLflow, chỉ cần chọn một
+- D) Cả hai đều là công cụ chuyên dụng riêng cho LLMOps
+
+**Answer:** A
+**Explanation:** Bài nhấn "use both, don't choose one" — hai công cụ bổ sung nhau. B đảo ngược vai trò; C sai vì chúng không thay thế nhau; D sai phạm vi (đều dùng chung cho ML).
+
+## Q6 [priority: Essential]
+**Question:** Chiến lược deployment nào cho model mới xử lý toàn bộ traffic nhưng KHÔNG trả response của nó về user?
+- A) Canary — chia 5% traffic rồi tăng dần qua các health check
+- B) Blue/Green — dựng v2 song song rồi switch toàn bộ traffic
+- C) Shadow — mirror traffic sang v2, chỉ log, không trả response
+- D) Rolling — thay lần lượt từng pod trong K8s deployment
+
+**Answer:** C
+**Explanation:** Shadow (Dark Launch) đạt zero rủi ro user-facing vì response v2 chỉ để log/so sánh. A chia một phần traffic và có trả response; B switch toàn bộ; D thao tác ở tầng pod.
+
+## Q7 [priority: Essential]
+**Question:** Vì sao Data Validation được đặt TRƯỚC Model Training trong CI pipeline?
+- A) Fail-fast: data hỏng thì chặn ngay, khỏi đốt hàng giờ GPU vô ích
+- B) Vì Great Expectations chạy chậm nên cần ưu tiên khởi động sớm
+- C) Để clean và chuẩn hoá dữ liệu trước khi đưa vào training
+- D) Vì bước training không thực sự cần đến dữ liệu đầu vào
+
+**Answer:** A
+**Explanation:** Nguyên tắc fail-fast tiết kiệm tài nguyên. C là bẫy hay gặp: Data Validation là quality GATE (phát hiện + chặn), không phải bước clean. B và D sai về vai trò của các stage.
+
+## Q8 [priority: Important] [weak-area]
+**Question:** Great Expectations đảm nhận vai trò gì trong pipeline?
+- A) Tự động sửa và chuẩn hoá dữ liệu bẩn trước khi train
+- B) Kiểm tra chất lượng data và fail pipeline nếu vi phạm, nhưng không sửa data
+- C) Sinh thêm dữ liệu tổng hợp để cân bằng các lớp thiểu số
+- D) Chọn ra tập held-out cố định để Eval Gate dùng so sánh
+
+**Answer:** B
+**Explanation:** Great Expectations là quality gate: phát hiện data xấu (schema, null, drift, volume, freshness) và chặn, không biến đổi data. A nhầm validation với cleaning; C và D là chức năng của công cụ/bước khác.
+
+## Q9 [priority: Important]
+**Question:** Cơ chế nào của Canary giúp giới hạn "blast radius" khi model mới có lỗi Eval Gate không bắt được?
+- A) Dựng hai môi trường đầy đủ rồi switch toàn bộ khi sẵn sàng
+- B) Route một phần nhỏ traffic tăng dần qua các health-check gate, rollback nếu vượt ngưỡng
+- C) Mirror toàn bộ traffic sang model mới nhưng không trả response
+- D) Thay lần lượt từng pod cho tới khi cụm chạy hết model mới
+
+**Answer:** B
+**Explanation:** Canary chỉ để lỗi chạm % nhỏ user, phát hiện sớm trên traffic thật rồi rollback (P99 latency vượt ngưỡng hoặc accuracy giảm >2%). A là Blue/Green, C là Shadow, D là Rolling.
+
+## Q10 [priority: Important]
+**Question:** Trong A/B testing, vì sao phải hash user_id để mỗi user luôn thấy cùng một variant?
+- A) Để phân bổ nhiều traffic hơn cho variant mới cần dữ liệu
+- B) Vì MD5 tính nhanh nên giảm được độ trễ khi routing
+- C) Để tiết kiệm băng thông giữa load balancer và model
+- D) Giữ UX nhất quán và tránh nhiễm chéo phép đo, nhờ đó so sánh sạch
+
+**Answer:** D
+**Explanation:** Deterministic routing giữ user dính một variant → mỗi click/conversion quy được về đúng một model. A, B, C nêu lợi ích phụ hoặc không liên quan tới lý do consistency của phép đo.
+
+## Q11 [priority: Important]
+**Question:** Model Test loại "Invariance" khác "Directional" ở tiêu chí nào?
+- A) Invariance đổi input theo cách không nên ảnh hưởng → output giữ nguyên; Directional thì output phải đổi đúng chiều
+- B) Invariance chỉ áp dụng cho ảnh, còn Directional chỉ áp dụng cho văn bản
+- C) Invariance đo độ chính xác, còn Directional đo tốc độ suy luận của model
+- D) Invariance kiểm tra trên golden set, còn Directional kiểm tra trên data drift
+
+**Answer:** A
+**Explanation:** Tiêu chí là thay đổi input CÓ nên làm output đổi hay không: xoay ảnh 90° → giữ nguyên (invariance); thêm "not" → đảo sentiment (directional). B, C, D nêu tiêu chí sai (modal, loại metric, loại tập test).
+
+## Q12 [priority: Important]
+**Question:** Trong MLflow Registry, alias "champion" và "challenger" phân biệt nhau theo tiêu chí nào?
+- A) Theo loại model: champion cho traditional ML, challenger cho LLM
+- B) Theo vai trò/stage: champion là version Production hiện tại, challenger là ứng viên A/B
+- C) Theo kiến trúc: champion có accuracy cao hơn nên được đặt tên vậy
+- D) Theo thời điểm tạo: champion là version cũ nhất còn lưu trong registry
+
+**Answer:** B
+**Explanation:** Phân biệt bằng VAI TRÒ trong lifecycle, không phải loại/kiến trúc/tuổi model. A, C, D đều gán sai tiêu chí.
 
 ## Q13 [priority: Supporting]
 **Question:** Vì sao Testing Pyramid có nhiều unit test ở đáy và ít load test ở đỉnh?
-- A) Vì unit test quan trọng hơn load test
-- B) Unit test nhanh & rẻ nhất (làm nhiều, bắt lỗi sớm & rẻ); load test chậm & tốn tài nguyên nhất (làm ít)
-- C) Vì load test không cần thiết
-- D) Vì đó là quy định bắt buộc của pytest
+- A) Vì unit test quan trọng hơn nên cần viết nhiều hơn load test
+- B) Vì pytest chỉ hỗ trợ unit test, còn load test cần công cụ khác
+- C) Vì unit test nhanh/rẻ (bắt lỗi sớm), load test chậm/tốn tài nguyên (làm ít)
+- D) Vì load test có thể bỏ qua nếu unit test đã pass đầy đủ
 
-**Answer:** B
-**Explanation:** Kim tự tháp tối ưu chi phí bắt lỗi: nhiều test rẻ ở đáy bắt bug sớm; bug lọt xuống load test thì đắt hơn nhiều để tìm và sửa.
+**Answer:** C
+**Explanation:** Kim tự tháp tối ưu chi phí bắt lỗi: nhiều test rẻ ở đáy chặn bug sớm; bug lọt tới load test thì đắt hơn để tìm/sửa. A nhầm "quan trọng" với "số lượng"; B và D sai (load test vẫn cần và không thể bỏ).
